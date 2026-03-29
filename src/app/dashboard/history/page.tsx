@@ -8,10 +8,6 @@ import { Clock } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TableSkeleton } from "@/components/ui/Skeleton";
 
-export const metadata = {
-  title: "Transaction History",
-  description: "Review your deposits, withdrawals, and rebalancing activity.",
-};
 
 export default function HistoryPage() {
   const [showEmpty, setShowEmpty] = useState(true);
