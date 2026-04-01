@@ -1,3 +1,8 @@
+import { redirect } from "next/navigation";
+
+// Root page — forward to dashboard (middleware handles auth gate)
+export default function HomePage() {
+  redirect("/dashboard");
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/features/landing/HeroSection";
 import { FeaturesSection } from "@/features/landing/FeaturesSection";
