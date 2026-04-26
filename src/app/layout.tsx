@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
 import { ClientProviders } from "@/components/ClientProviders";
@@ -20,6 +20,14 @@ export const metadata: Metadata = {
   },
   description:
     "NeuroWealth is an autonomous AI agent that deploys your USDC into the highest-yielding DeFi opportunities on Stellar — automatically, 24/7. No DeFi knowledge required.",
+};
+
+/**
+ * viewport-fit=cover enables env(safe-area-inset-*) on notched iOS devices.
+ * Required for MobileBottomNav and fixed CTAs to clear the home indicator.
+ */
+export const viewport: Viewport = {
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

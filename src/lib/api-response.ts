@@ -70,6 +70,92 @@ function normalizeErrorDetails(
 }
 
 /**
+ * Maximum allowed request body size for POST API routes (100 KB).
+ * Aligns with Vercel's default serverless function body limit.
+ * Documented here so all routes share the same constant.
+ */
+export const MAX_BODY_BYTES = 100 * 1024; // 100 KB
+
+/**
+ * Read and parse a JSON request body, enforcing a byte-size limit.
+ *
+ * Returns `{ ok: true, data }` on success, or
+ * `{ ok: false, response }` with a ready-to-return NextResponse on failure.
+ *
+ * Usage in a route handler:
+ *   const result = await readJsonBody(request);
+ *   if (!result.ok) return result.response;
+ *   const raw = result.data;
+ */
+export async function readJsonBody(
+    request: Request,
+    maxBytes = MAX_BODY_BYTES,
+): Promise<
+    | { ok: true; data: unknown }
+    | { ok: false; response: import("next/server").NextResponse }
+> {
+    const { NextResponse } = await import("next/server");
+
+    // Check Content-Length header first (fast path — not always present)
+    const contentLength = request.headers.get("content-length");
+    if (contentLength !== null && parseInt(contentLength, 10) > maxBytes) {
+        return {
+            ok: false,
+            response: NextResponse.json(
+                errorResponse(
+                    "PAYLOAD_TOO_LARGE",
+                    `Request body must not exceed ${maxBytes / 1024} KB.`,
+                ),
+                { status: 413 },
+            ),
+        };
+    }
+
+    // Read the raw bytes so we can enforce the limit even without Content-Length
+    let bytes: Uint8Array;
+    try {
+        const arrayBuffer = await request.arrayBuffer();
+        bytes = new Uint8Array(arrayBuffer);
+    } catch {
+        return {
+            ok: false,
+            response: NextResponse.json(
+                errorResponse("VALIDATION_ERROR", "Failed to read request body."),
+                { status: 400 },
+            ),
+        };
+    }
+
+    if (bytes.byteLength > maxBytes) {
+        return {
+            ok: false,
+            response: NextResponse.json(
+                errorResponse(
+                    "PAYLOAD_TOO_LARGE",
+                    `Request body must not exceed ${maxBytes / 1024} KB.`,
+                ),
+                { status: 413 },
+            ),
+        };
+    }
+
+    try {
+        const text = new TextDecoder().decode(bytes);
+        return { ok: true, data: JSON.parse(text) };
+    } catch {
+        return {
+            ok: false,
+            response: NextResponse.json(
+                errorResponse("VALIDATION_ERROR", "Request body must be valid JSON.", {
+                    body: ["Malformed JSON payload."],
+                }),
+                { status: 400 },
+            ),
+        };
+    }
+}
+
+/**
  * Create an error response.
  * `details` accepts any plain object (e.g. field error maps); non-string values are omitted.
  */

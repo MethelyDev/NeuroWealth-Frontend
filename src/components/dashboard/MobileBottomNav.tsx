@@ -15,6 +15,7 @@ export default function MobileBottomNav() {
   return (
     <nav
       className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-surface border-t border-surface-border"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       aria-label="Mobile navigation"
     >
       <ul className="flex items-center justify-around h-16" role="list">

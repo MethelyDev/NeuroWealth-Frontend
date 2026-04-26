@@ -20,6 +20,7 @@ export function CookieBanner() {
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
         boxShadow: "0 -4px 40px rgba(0,0,0,0.7)",
+        paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
       <div className="flex items-center gap-3 min-w-0">

@@ -8,6 +8,7 @@ import {
   ERROR_CODE,
   HTTP_STATUS,
   errorResponse,
+  readJsonBody,
   successResponse,
 } from "@/lib/api-response";
 import {
@@ -30,22 +31,9 @@ function resolveEndpoint(baseUrl: string, pathOrUrl: string): string {
 }
 
 export async function POST(request: Request) {
-  let rawPayload: unknown;
-
-  try {
-    rawPayload = await request.json();
-  } catch {
-    return NextResponse.json(
-      errorResponse(
-        ERROR_CODE.VALIDATION_ERROR,
-        "Request body must be valid JSON.",
-        {
-          body: ["Malformed JSON payload."],
-        },
-      ),
-      { status: HTTP_STATUS.BAD_REQUEST },
-    );
-  }
+  const bodyResult = await readJsonBody(request);
+  if (!bodyResult.ok) return bodyResult.response;
+  const rawPayload = bodyResult.data;
 
   const parsedPayload = transactionRequestSchema.safeParse(rawPayload);
 
