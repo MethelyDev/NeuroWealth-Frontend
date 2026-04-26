@@ -10,7 +10,7 @@ export default function UnauthorizedPage() {
       title="Authentication required"
       description="You need to sign in to access this page. Please connect your wallet or sign in to continue."
       icon={<Lock size={32} />}
-      primaryAction={{ label: "Sign in", href: "/signin" }}
+      primaryAction={{ label: "Sign in", href: "/login" }}
       secondaryAction={{ label: "Back to home", href: "/" }}
     />
   );

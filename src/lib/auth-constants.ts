@@ -11,6 +11,12 @@ export const SESSION_STORAGE_KEY = "neurowealth_session" as const;
 /**
  * Cookie name written by middleware / login handler.
  * Must match what middleware reads and what the login API sets.
+ *
+ * This implementation is a demo flow: mock sessions are stored in
+ * localStorage for client-side auth and mirrored to a non-httpOnly cookie
+ * so middleware can verify whether a browser tab is authenticated.
+ * In a real JWT flow, this contract should be replaced by a secure,
+ * httpOnly session cookie or token verification endpoint.
  */
 export const SESSION_COOKIE_NAME = "nw_session" as const;
 

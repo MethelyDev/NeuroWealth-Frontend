@@ -69,7 +69,6 @@ const appRouteDefinitions: AppRouteDefinition[] = [
   { href: "/onboarding", label: "Onboarding", icon: BookOpenText },
   { href: "/profile", label: "Profile", icon: UserRound },
   { href: "/settings", label: "Settings", icon: Settings },
-  { href: "/signin", label: "Sign In", icon: LogIn },
   { href: "/signup", label: "Sign Up", icon: LogIn },
   { href: "/unauthorized", label: "Unauthorized", icon: Shield },
   { href: "/forbidden", label: "Forbidden", icon: Shield },

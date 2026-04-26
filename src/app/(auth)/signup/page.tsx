@@ -323,7 +323,7 @@ export default function SignUpPage() {
 
         <footer className="border-t border-slate-700/50 pt-5 text-center text-sm text-slate-400">
           Already have an account?{" "}
-          <Link href="/signin" className="font-semibold text-sky-300 hover:text-sky-200">
+          <Link href="/login" className="font-semibold text-sky-300 hover:text-sky-200">
             Sign In
           </Link>
         </footer>

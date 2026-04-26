@@ -107,7 +107,7 @@ export function Navbar() {
               </button>
             </div>
           ) : (
-            <Link href="/signin">
+            <Link href="/login">
               <Button variant="secondary" size="sm" className="text-xs h-9">
                 {messages.navbar.signIn}
               </Button>
