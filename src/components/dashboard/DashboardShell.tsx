@@ -13,16 +13,24 @@ interface DashboardShellProps {
  * Client-side shell that provides auth context and the persistent
  * layout chrome (sidebar, header, mobile nav).
  *
- * Layout — Desktop:
+ * Layout — Desktop (≥ 1024px):
  *   ┌────────────┬────────────────────────┐
  *   │  Sidebar   │   Top Header           │
  *   │  (256px)   ├────────────────────────┤
  *   │            │   <children>           │
  *   └────────────┴────────────────────────┘
  *
- * Layout — Mobile:
+ * Layout — Tablet (640–1023px):
+ *   ┌──────┬─────────────────────────────┐
+ *   │ Rail │   Top Header                │
+ *   │ 56px ├─────────────────────────────┤
+ *   │      │   <children>                │
+ *   └──────┴─────────────────────────────┘
+ *   Rail expands to 256px on user toggle.
+ *
+ * Layout — Mobile (< 640px):
  *   ┌────────────────────────┐
- *   │   Compact Header       │
+ *   │   Compact Top Header   │
  *   ├────────────────────────┤
  *   │   <children>           │
  *   ├────────────────────────┤
@@ -32,18 +40,19 @@ interface DashboardShellProps {
 export default function DashboardShell({ children }: DashboardShellProps) {
   return (
     <>
-      {/* Desktop sidebar */}
+      {/* Sidebar: hidden on mobile, icon-rail on tablet, full on desktop */}
       <Sidebar />
 
-      {/* Top header — spans full width minus sidebar on desktop */}
+      {/* Top header — spans full width minus sidebar */}
       <TopHeader />
 
-      {/* Main content area — single document main; route title lives in TopHeader (aria-labelledby). */}
+      {/* Main content area */}
       <main
         className="
-          pt-16        /* clear fixed header */
-          md:pl-64     /* clear fixed sidebar */
-          pb-20 md:pb-0 /* clear mobile bottom nav */
+          pt-16          /* clear fixed header (64px) */
+          sm:pl-14       /* clear collapsed tablet sidebar (56px) */
+          lg:pl-64       /* clear full desktop sidebar (256px) */
+          pb-20 sm:pb-0  /* clear mobile bottom nav on xs only */
           min-h-screen
           bg-app-bg
         "
@@ -56,7 +65,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
         </div>
       </main>
 
-      {/* Mobile bottom navigation */}
+      {/* Mobile bottom navigation — visible below 640px only */}
       <MobileBottomNav />
     </>
   );
