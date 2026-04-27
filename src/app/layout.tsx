@@ -4,6 +4,7 @@ import "./globals.css";
 import { ClientProviders } from "@/components/ClientProviders";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DiagnosticsPanel } from "@/components/diagnostics/DiagnosticsPanel";
+import { CommandPalette } from "@/components/CommandPalette";
 import { MAIN_CONTENT_LANDMARK_ID } from "@/lib/app-landmarks";
 import { THEME_STORAGE_KEY } from "@/lib/theme-persistence";
 
@@ -53,6 +54,7 @@ export default function RootLayout({
           <ErrorBoundary>
             {children}
             <DiagnosticsPanel />
+            <CommandPalette />
           </ErrorBoundary>
         </ClientProviders>
       </body>
