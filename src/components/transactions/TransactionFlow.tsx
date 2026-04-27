@@ -21,9 +21,14 @@ import {
   TransactionQuote,
   TransactionReceipt,
   validateTransactionValues,
+  getTransactionRecoveryUI,
+  mapErrorCodeToErrorMode,
+  type RecoveryAction,
+  type TransactionRecoveryUI,
 } from "@/lib/transactions";
 import { ApiRequestError, apiRequest } from "@/lib/api-client";
 import { useSandbox } from "@/contexts/SandboxContext";
+import { TransactionErrorRecovery } from "./TransactionErrorRecovery";
 
 type ThemeMode = "light" | "dark";
 
@@ -103,7 +108,7 @@ export function TransactionFlow() {
     parsePreviewState(searchParams.get("preview")),
   );
   const [stage, setStage] = useState<
-    "form" | "confirm" | "pending" | "success" | "failure"
+    "form" | "confirm" | "pending" | "success" | "failure" | "error"
   >("form");
   const [formValues, setFormValues] = useState<TransactionFormValues>(() =>
     getDefaultTransactionValues(kind),
@@ -114,6 +119,8 @@ export function TransactionFlow() {
   const [receipt, setReceipt] = useState<TransactionReceipt | null>(null);
   const [requestMessage, setRequestMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [recovery, setRecovery] = useState<TransactionRecoveryUI | null>(null);
+  const [lastErrorReference, setLastErrorReference] = useState<string | null>(null);
 
   const context = getTransactionContext(kind);
   const statusChips = buildStatusChips(kind, formValues);
@@ -136,6 +143,8 @@ export function TransactionFlow() {
       setReceipt(null);
       setRequestMessage(null);
       setIsSubmitting(false);
+      setRecovery(null);
+      setLastErrorReference(null);
       return;
     }
 
@@ -147,6 +156,8 @@ export function TransactionFlow() {
     setReceipt(snapshot.receipt);
     setRequestMessage(null);
     setIsSubmitting(false);
+    setRecovery(null);
+    setLastErrorReference(null);
   }, [kind, preview]);
 
   // Handle sandbox scenarios
@@ -187,7 +198,10 @@ export function TransactionFlow() {
     return () => {
       if (timeoutRef.current) {
         window.clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
       }
+      // Clean up all state on unmount to prevent memory leaks
+      // This ensures pending states and timers are cleared when component is destroyed
     };
   }, []);
 
@@ -264,6 +278,7 @@ export function TransactionFlow() {
 
     setIsSubmitting(true);
     setRequestMessage(null);
+    setRecovery(null);
 
     try {
       const payload = await apiRequest<{ quote: TransactionQuote }>(
@@ -282,18 +297,22 @@ export function TransactionFlow() {
       setFieldErrors({});
       setQuote(payload.quote);
       setStage("confirm");
+      setRecovery(null);
     } catch (error) {
       if (error instanceof ApiRequestError) {
+        // Map API error code to recovery UI with actionable copy
+        const recoveryUI = getTransactionRecoveryUI(error.code, quote?.reference);
+        setRecovery(recoveryUI);
+        setLastErrorReference(quote?.reference || null);
         setFieldErrors(detailsToFieldErrors(error.details));
-        setRequestMessage(
-          error.message ?? "Unable to prepare the confirmation step.",
-        );
+        setStage("error");
         return;
       }
 
-      setRequestMessage(
-        "Quote request failed. Check your connection and try again.",
-      );
+      // Handle unexpected errors by mapping to unknown error mode
+      const recoveryUI = getTransactionRecoveryUI("unknown_error");
+      setRecovery(recoveryUI);
+      setStage("error");
     } finally {
       setIsSubmitting(false);
     }
@@ -306,6 +325,7 @@ export function TransactionFlow() {
 
     setIsSubmitting(true);
     setRequestMessage(null);
+    setRecovery(null);
 
     try {
       const payload = await apiRequest<{ pending: PendingTransaction }>(
@@ -324,6 +344,7 @@ export function TransactionFlow() {
       setPending(payload.pending);
       setQuote(payload.pending.quote);
       setStage("pending");
+      setLastErrorReference(payload.pending.reference);
 
       timeoutRef.current = window.setTimeout(() => {
         const nextReceipt = buildTransactionReceipt(
@@ -339,14 +360,22 @@ export function TransactionFlow() {
       }, payload.pending.completionDelayMs);
     } catch (error) {
       if (error instanceof ApiRequestError) {
-        setFieldErrors(detailsToFieldErrors(error.details));
-        setRequestMessage(
-          error.message ?? "Submission failed before reaching the network.",
+        // Map API error code to recovery UI with actionable copy and transaction reference
+        const recoveryUI = getTransactionRecoveryUI(
+          error.code,
+          quote?.reference,
         );
+        setRecovery(recoveryUI);
+        setLastErrorReference(quote?.reference || null);
+        setFieldErrors(detailsToFieldErrors(error.details));
+        setStage("error");
       } else {
-        setRequestMessage("Submission failed before reaching the network.");
+        // Handle unexpected errors by mapping to unknown error mode
+        const recoveryUI = getTransactionRecoveryUI("unknown_error", quote?.reference);
+        setRecovery(recoveryUI);
+        setLastErrorReference(quote?.reference || null);
+        setStage("error");
       }
-      setStage("form");
     } finally {
       setIsSubmitting(false);
     }
@@ -356,8 +385,43 @@ export function TransactionFlow() {
     handlePreviewChange("interactive");
   }
 
+  /**
+   * Handles recovery actions from the error recovery UI.
+   * Maps user choices to product actions: retry (submitAgain), edit (backToForm), or support (open email).
+   */
+  function handleRecoveryAction(action: RecoveryAction) {
+    switch (action) {
+      case "retry": {
+        // Clear error state and retry the last operation
+        setStage("form");
+        setRecovery(null);
+        setIsSubmitting(false);
+        break;
+      }
+      case "edit": {
+        // Return to form so user can review and edit amount or wallet details
+        setStage("form");
+        setRecovery(null);
+        setIsSubmitting(false);
+        break;
+      }
+      case "support": {
+        // Open email client to contact support with transaction reference
+        const email = recovery?.supportEmail || "support@neurowealth.com";
+        const subject = encodeURIComponent(
+          `Transaction issue - Reference: ${lastErrorReference || "unknown"}`,
+        );
+        const body = encodeURIComponent(
+          `Describe your issue here.\n\nTransaction Reference: ${lastErrorReference || "N/A"}\nTransaction Type: ${kind}\n`,
+        );
+        window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+        break;
+      }
+    }
+  }
+
   function currentStepIndex(): number {
-    if (stage === "form") {
+    if (stage === "form" || stage === "error") {
       return 0;
     }
 
@@ -852,6 +916,14 @@ export function TransactionFlow() {
                     </div>
                   </div>
                 </div>
+              ) : null}
+
+              {stage === "error" && recovery ? (
+                <TransactionErrorRecovery
+                  recovery={recovery}
+                  onActionSelect={handleRecoveryAction}
+                  isLoading={isSubmitting}
+                />
               ) : null}
 
               {(stage === "success" || stage === "failure") && receipt ? (

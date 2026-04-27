@@ -9,6 +9,36 @@ export type TransactionPreviewState =
   | "failure";
 export type ValidationTone = "error" | "success" | "warning";
 
+// Error recovery types
+export type RecoveryAction = "retry" | "edit" | "support";
+export type ErrorMode =
+  | "network_error"
+  | "timeout"
+  | "server_error"
+  | "validation_error"
+  | "quota_error"
+  | "state_conflict"
+  | "unknown_error";
+
+export interface TransactionRecoveryUI {
+  title: string;
+  description: string;
+  primaryAction: {
+    label: string;
+    action: RecoveryAction;
+  };
+  secondaryAction?: {
+    label: string;
+    action: RecoveryAction;
+  };
+  tertiaryAction?: {
+    label: string;
+    action: RecoveryAction;
+  };
+  reference?: string;
+  supportEmail?: string;
+}
+
 export interface TransactionFormValues {
   amount: string;
   walletAddress: string;
@@ -127,6 +157,113 @@ const MINIMUM_AMOUNT = {
 const STRATEGY_LABEL = "Balanced";
 
 const STELLAR_ADDRESS_PATTERN = /^G[A-Z2-7]{55}$/;
+
+// Error recovery product copy mapping for each failure mode
+const ERROR_RECOVERY_COPY: Record<ErrorMode, TransactionRecoveryUI> = {
+  network_error: {
+    title: "Connection lost",
+    description: "Your connection to the service was interrupted. Please check your network and try again, or contact support if the problem persists.",
+    primaryAction: {
+      label: "Retry request",
+      action: "retry",
+    },
+    secondaryAction: {
+      label: "Edit details",
+      action: "edit",
+    },
+    tertiaryAction: {
+      label: "Contact support",
+      action: "support",
+    },
+    supportEmail: "support@neurowealth.com",
+  },
+  timeout: {
+    title: "Request timed out",
+    description: "The server took too long to respond. Your amount and wallet settings are still saved. Retry the request or adjust your amount and try again.",
+    primaryAction: {
+      label: "Retry",
+      action: "retry",
+    },
+    secondaryAction: {
+      label: "Edit amount",
+      action: "edit",
+    },
+    tertiaryAction: {
+      label: "Contact support",
+      action: "support",
+    },
+    supportEmail: "support@neurowealth.com",
+  },
+  server_error: {
+    title: "Service experiencing issues",
+    description: "Our service is temporarily unavailable or experiencing issues. Your details are saved. Try again in a few moments, or contact support for assistance.",
+    primaryAction: {
+      label: "Try again later",
+      action: "retry",
+    },
+    secondaryAction: {
+      label: "Edit details",
+      action: "edit",
+    },
+    tertiaryAction: {
+      label: "Contact support",
+      action: "support",
+    },
+    supportEmail: "support@neurowealth.com",
+  },
+  validation_error: {
+    title: "Validation failed",
+    description: "The amount or wallet details didn't pass validation. Review your entries and make corrections before retrying.",
+    primaryAction: {
+      label: "Edit details",
+      action: "edit",
+    },
+    secondaryAction: {
+      label: "Go back",
+      action: "edit",
+    },
+    supportEmail: "support@neurowealth.com",
+  },
+  quota_error: {
+    title: "Amount exceeds limit",
+    description: "The amount exceeds your available balance or transaction limit. Adjust the amount to a lower value and try again.",
+    primaryAction: {
+      label: "Edit amount",
+      action: "edit",
+    },
+    supportEmail: "support@neurowealth.com",
+  },
+  state_conflict: {
+    title: "Account state changed",
+    description: "Your account balance, wallet, or transaction status changed. Review your current balance and wallet settings, then retry.",
+    primaryAction: {
+      label: "Review and retry",
+      action: "edit",
+    },
+    tertiaryAction: {
+      label: "Contact support",
+      action: "support",
+    },
+    supportEmail: "support@neurowealth.com",
+  },
+  unknown_error: {
+    title: "Something went wrong",
+    description: "An unexpected error occurred while processing your transaction. Your details are saved. Please try again or contact support for help.",
+    primaryAction: {
+      label: "Retry",
+      action: "retry",
+    },
+    secondaryAction: {
+      label: "Edit details",
+      action: "edit",
+    },
+    tertiaryAction: {
+      label: "Contact support",
+      action: "support",
+    },
+    supportEmail: "support@neurowealth.com",
+  },
+};
 
 function roundCurrency(value: number): number {
   return Math.round(value * 100) / 100;
@@ -470,5 +607,56 @@ export function buildStatusChips(
       tone: "success",
     },
   ];
+}
+
+/**
+ * Maps API error codes to ErrorMode for product copy and recovery actions.
+ * This ensures network and server errors are actionable: retry, edit amount, or contact support.
+ */
+export function mapErrorCodeToErrorMode(code: string): ErrorMode {
+  switch (code) {
+    case "NETWORK_ERROR":
+      return "network_error";
+    case "REQUEST_TIMEOUT":
+      return "timeout";
+    case "VALIDATION_FAILED":
+    case "INVALID_AMOUNT":
+    case "INVALID_WALLET":
+      return "validation_error";
+    case "INSUFFICIENT_BALANCE":
+    case "QUOTA_EXCEEDED":
+    case "RATE_LIMITED":
+      return "quota_error";
+    case "STATE_CONFLICT":
+    case "CONCURRENT_UPDATE":
+      return "state_conflict";
+    case "INVALID_JSON":
+    case "INVALID_ENVELOPE":
+    case "SERVICE_UNAVAILABLE":
+    case "INTERNAL_SERVER_ERROR":
+      return "server_error";
+    default:
+      return "unknown_error";
+  }
+}
+
+/**
+ * Builds the recovery UI instructions for a given error.
+ * Accepts error code or error mode, returns actionable product copy with retry/edit/support options.
+ */
+export function getTransactionRecoveryUI(
+  codeOrMode: string,
+  reference?: string,
+): TransactionRecoveryUI {
+  const mode: ErrorMode = codeOrMode.includes("_")
+    ? (mapErrorCodeToErrorMode(codeOrMode) as ErrorMode)
+    : (codeOrMode as ErrorMode);
+
+  const copy = ERROR_RECOVERY_COPY[mode] || ERROR_RECOVERY_COPY.unknown_error;
+
+  return {
+    ...copy,
+    reference: reference || undefined,
+  };
 }
 
