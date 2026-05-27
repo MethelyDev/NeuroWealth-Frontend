@@ -80,6 +80,10 @@ export default function Pagination({
 
   return (
     <nav aria-label="Pagination" className={className} style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+      {/* Live region announces page changes to screen readers */}
+      <span role="status" aria-live="polite" aria-atomic="true" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap" }}>
+        Page {current} of {totalPages}
+      </span>
       {/* Prev */}
       <button
         onClick={() => go(current - 1)}

@@ -35,7 +35,10 @@ export default function TransactionList() {
 
       {/* Table */}
       <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }} aria-label="Transaction history">
+          <caption style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap" }}>
+            Transaction history, {totalItems} results
+          </caption>
           <thead>
             <tr style={{ borderBottom: "0.5px solid #21262d" }}>
               {["Date", "Description", "Type", "Amount", "Status"].map((h) => (
