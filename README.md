@@ -290,6 +290,210 @@ The deposit detection system monitors user Stellar wallet addresses for incoming
 - **Deployment Coordinator**: Emits deployment events and handles confirmations
 - **Deposit Messaging**: Sends WhatsApp notifications for deposit lifecycle events
 
+## Backend API Contract
+
+This section defines the integration contract between the Next.js frontend and the real backend service. Until `NEUROWEALTH_API_BASE_URL` is set, all routes fall back to demo/mock data automatically.
+
+### Architecture
+
+```
+Browser
+  └─→ Next.js /api/* routes          (internal BFF layer)
+          ├─→ Real backend            (when NEUROWEALTH_API_BASE_URL is set)
+          └─→ Demo / mock data        (default, no backend required)
+```
+
+### Response Envelope
+
+Every response — from both the internal `/api/*` routes and the real backend — must use this envelope:
+
+```jsonc
+// Success
+{ "success": true, "data": { /* typed payload */ } }
+
+// Error
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",      // machine-readable, see error codes below
+    "message": "Human-readable text",
+    "details": {                     // optional: per-field error arrays
+      "amount": ["Amount is required"]
+    }
+  }
+}
+```
+
+### Auth Expectations
+
+| Direction | Mechanism |
+|-----------|-----------|
+| Browser → Next.js `/api/*` | httpOnly session cookie (`nw_session`) set at sign-in — no extra header needed |
+| Next.js server → real backend | `Authorization: Bearer <NEUROWEALTH_API_AUTH_TOKEN>` on every proxied request |
+
+On the frontend, authenticated requests are made through `apiRequest` (see `src/lib/api-client.ts`). On the server, route handlers should use `createServerApiClient()` from the same module, which injects the bearer token automatically.
+
+**Auth session shape** (`AuthSession` in `src/lib/auth-adapter.ts`):
+
+```ts
+{
+  user: {
+    id: string;
+    displayName: string;
+    email: string;
+    walletAddress?: string;
+  };
+  token: string;   // opaque bearer token; 7-day expiry in mock
+  expiresAt: number; // Unix ms timestamp
+}
+```
+
+The real backend's `/auth/sign-in` and `/auth/sign-up` endpoints must return this shape inside the standard success envelope so the frontend adapter can swap in without UI changes.
+
+### Endpoints
+
+All paths below are relative to `NEUROWEALTH_API_BASE_URL`. The override env var lets you remap individual paths without code changes.
+
+#### `GET /portfolio/overview` — `NEUROWEALTH_PORTFOLIO_PATH`
+
+Returns the authenticated user's portfolio summary.
+
+**Response `data`:**
+```ts
+{
+  totalBalance: number;      // USDC, 2 dp
+  totalYield: number;        // USDC earned all-time
+  currentApy: number;        // e.g. 8.4  (percent)
+  strategy: "conservative" | "balanced" | "growth";
+  lastUpdated: number;       // Unix ms timestamp
+  allocations: Array<{
+    protocol: string;        // e.g. "Blend", "Stellar DEX"
+    amount: number;
+    percentage: number;
+    apy: number;
+  }>;
+  source: "api" | "demo";   // echoed back; route sets x-neurowealth-source header
+}
+```
+
+#### `GET /strategy/preference` — `NEUROWEALTH_STRATEGY_PATH`
+
+Returns the user's current strategy setting.
+
+**Response `data`:**
+```ts
+{ strategy: "conservative" | "balanced" | "growth" }
+```
+
+#### `PUT /strategy/preference` — `NEUROWEALTH_STRATEGY_PATH`
+
+Updates the user's strategy preference.
+
+**Request body:**
+```json
+{ "strategy": "balanced" }
+```
+
+**Response `data`:** same shape as GET above.
+
+#### `POST /transactions` — `NEUROWEALTH_TRANSACTIONS_PATH`
+
+Handles both quote generation and transaction submission via the `intent` field.
+
+**Request body:**
+```ts
+{
+  intent: "quote" | "submit";
+  kind: "deposit" | "withdrawal";
+  values: {
+    amount: string;          // stringified number, e.g. "100.00"
+    walletAddress: string;   // Stellar public key (G...)
+    walletConnected: boolean;
+  };
+}
+```
+
+**Response `data` — quote:**
+```ts
+{
+  quote: {
+    kind: "deposit" | "withdrawal";
+    amount: number;
+    fee: number;
+    estimatedApy?: number;   // deposit only
+    netAmount: number;
+    expiresAt: number;       // Unix ms; quote valid for ~30 s
+  }
+}
+```
+
+**Response `data` — submit:**
+```ts
+{
+  pending: {
+    id: string;
+    kind: "deposit" | "withdrawal";
+    amount: number;
+    status: "pending";
+    txHash?: string;         // Stellar transaction hash if immediately available
+    timestamp: number;
+  }
+}
+```
+
+#### `GET /transaction-history`
+
+Currently served from mock data only. When wiring up the real backend, the query parameters and paginated response shape are:
+
+**Query params:** `kind`, `status`, `dateFrom`, `dateTo`, `page`, `pageSize` (max 50)
+
+**Response `data`:**
+```ts
+{
+  transactions: Transaction[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+```
+
+### Error Codes
+
+| Code | Typical HTTP status | Meaning |
+|------|--------------------:|---------|
+| `VALIDATION_ERROR` | 400 / 422 | Request body or query params failed validation |
+| `UNAUTHORIZED` | 401 | Missing or expired bearer token |
+| `FORBIDDEN` | 403 | Token valid but insufficient permissions |
+| `NOT_FOUND` | 404 | Resource does not exist |
+| `BACKEND_ERROR` | 503 | Next.js could not reach the real backend |
+| `SERVICE_UNAVAILABLE` | 503 | Backend reachable but returned a non-2xx response |
+| `INTERNAL_ERROR` | 500 | Unexpected server-side error |
+| `REQUEST_TIMEOUT` | 408 | Client-side fetch exceeded `timeoutMs` (10 s default) |
+| `NETWORK_ERROR` | 503 | `fetch()` threw before receiving any response |
+| `INVALID_JSON` | — | Response body was not valid JSON |
+| `INVALID_ENVELOPE` | — | JSON parsed but did not match the success/error shape |
+
+### Switching from Mock to Real Backend
+
+1. Set the server-only env vars (`.env.local` or hosting secrets):
+   ```bash
+   NEUROWEALTH_API_BASE_URL=https://api.neurowealth.app
+   NEUROWEALTH_API_AUTH_TOKEN=your-secret-token
+   ```
+
+2. Implement `RealBackendAuthAdapter` in `src/lib/auth-adapter-real.ts` that satisfies the `AuthAdapter` interface (`src/lib/auth-adapter.ts`). The real backend's sign-in and sign-up endpoints must return `AuthSession` inside the standard success envelope.
+
+3. Wire it up in `src/lib/auth-provider-factory.ts`:
+   ```ts
+   import { realAuth } from "./auth-adapter-real";
+
+   export function getAuthAdapter(): AuthAdapter {
+     return process.env.NEUROWEALTH_API_BASE_URL ? realAuth : mockAuth;
+   }
+   ```
+
+4. In route handlers, replace direct `fetch` calls with `createServerApiClient()` from `src/lib/api-client.ts` to ensure the bearer token is always present.
+
 ## Documentation
 
 - [Networks](docs/networks.md): frontend network switching config and current mainnet scope boundaries.
