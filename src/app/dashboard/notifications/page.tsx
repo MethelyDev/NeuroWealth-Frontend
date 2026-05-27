@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   AlertTriangle,
   Bell,
@@ -11,6 +11,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import { useToast } from "@/components/notifications/ToastProvider";
+import type { ToastInput } from "@/components/notifications/ToastProvider";
 
 export const dynamic = "force-dynamic";
 import { Button, Card, InlineBanner } from "@/components/ui";
@@ -65,49 +66,42 @@ const bannerExamples = [
   },
 ];
 
+type MockFlowKey = "save" | "failure" | "timeout";
+
+interface MockFlowStep {
+  toast: ToastInput;
+  delayBefore?: number;
+}
+
+const MOCK_FLOWS: Record<MockFlowKey, MockFlowStep[]> = {
+  save: [
+    { toast: { variant: "info", title: "Saving changes", description: "We are syncing your latest notification rules now.", duration: 3000 } },
+    { delayBefore: 700, toast: { variant: "success", title: "Preferences saved", description: "All notification changes were applied successfully.", duration: 4000 } },
+  ],
+  failure: [
+    { toast: { variant: "error", title: "Delivery failed", description: "The server rejected this request. Check your connection and try again.", duration: 6000 } },
+  ],
+  timeout: [
+    { toast: { variant: "warning", title: "Session timeout warning", description: "Your review session will expire soon unless activity resumes.", duration: 6000 } },
+  ],
+};
+
+export async function runMockFlow(key: MockFlowKey, pushToast: (t: ToastInput) => void): Promise<void> {
+  for (const step of MOCK_FLOWS[key]) {
+    if (step.delayBefore) await new Promise((r) => setTimeout(r, step.delayBefore));
+    pushToast(step.toast);
+  }
+}
+
 export default function NotificationsPage() {
   const { limit, pushToast, setLimit } = useToast();
-  const [activeFlow, setActiveFlow] = useState<"save" | "failure" | "timeout" | null>(null);
+  const [activeFlow, setActiveFlow] = useState<MockFlowKey | null>(null);
 
-  const triggerMockFlow = async (flow: "save" | "failure" | "timeout") => {
+  const triggerMockFlow = useCallback(async (flow: MockFlowKey) => {
     setActiveFlow(flow);
-
-    if (flow === "save") {
-      pushToast({
-        variant: "info",
-        title: "Saving changes",
-        description: "We are syncing your latest notification rules now.",
-        duration: 3000,
-      });
-      await new Promise((resolve) => setTimeout(resolve, 700));
-      pushToast({
-        variant: "success",
-        title: "Preferences saved",
-        description: "All notification changes were applied successfully.",
-        duration: 4000,
-      });
-    }
-
-    if (flow === "failure") {
-      pushToast({
-        variant: "error",
-        title: "Delivery failed",
-        description: "The server rejected this request. Check your connection and try again.",
-        duration: 6000,
-      });
-    }
-
-    if (flow === "timeout") {
-      pushToast({
-        variant: "warning",
-        title: "Session timeout warning",
-        description: "Your review session will expire soon unless activity resumes.",
-        duration: 6000,
-      });
-    }
-
+    await runMockFlow(flow, pushToast);
     setTimeout(() => setActiveFlow(null), 1000);
-  };
+  }, [pushToast]);
 
   return (
     <div className="space-y-6 px-6 py-8">
