@@ -33,7 +33,7 @@ export function NotificationItem({ notification, onMarkAsRead }: NotificationIte
       onClick={() => {
         if (!isRead) {
           onMarkAsRead(id);
-          analytics.track("notification_read", { id, title });
+          analytics.track("notification_read", { id });
         }
       }}
     >

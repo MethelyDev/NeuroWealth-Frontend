@@ -24,9 +24,13 @@ const notifyListeners = (entry: LogEntry) => {
   listeners.forEach((l) => l(entry));
 };
 
-const scrubPII = (data: any): any => {
+export const scrubPII = (data: any): any => {
   if (!data) return data;
-  const sensitiveKeys = ["email", "address", "phone", "password", "secret", "key"];
+  const sensitiveKeys = [
+    "email", "address", "phone", "password", "secret", "key",
+    "name", "token", "userid", "ip", "ssn", "dob", "dateofbirth",
+    "creditcard", "cardnumber", "accountnumber",
+  ];
   if (typeof data === "object") {
     const scrubbed = Array.isArray(data) ? [...data] : { ...data };
     for (const key in scrubbed) {
@@ -52,12 +56,12 @@ const createEntry = (level: LogLevel, message: string, context?: any): LogEntry 
 export const logger = {
   info: (message: string, context?: any) => {
     const entry = createEntry("info", message, context);
-    console.log(`[INFO] ${message}`, context || "");
+    console.log(`[INFO] ${message}`, entry.context || "");
     notifyListeners(entry);
   },
   warn: (message: string, context?: any) => {
     const entry = createEntry("warn", message, context);
-    console.warn(`[WARN] ${message}`, context || "");
+    console.warn(`[WARN] ${message}`, entry.context || "");
     notifyListeners(entry);
   },
   error: (message: string, error?: any) => {
@@ -65,7 +69,7 @@ export const logger = {
       error: error instanceof Error ? error.message : error,
       stack: error instanceof Error ? error.stack : undefined,
     });
-    console.error(`[ERROR] ${message}`, error || "");
+    console.error(`[ERROR] ${message}`, entry.context || "");
     notifyListeners(entry);
   },
 };

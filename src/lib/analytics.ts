@@ -1,4 +1,4 @@
-import { logger } from "./logger";
+import { logger, scrubPII } from "./logger";
 
 export interface AnalyticsEvent {
   id: string;
@@ -24,18 +24,18 @@ const notifyListeners = (event: AnalyticsEvent) => {
 
 export const analytics = {
   track: (name: string, params?: Record<string, any>) => {
+    const safeParams = params ? scrubPII(params) : undefined;
     const event: AnalyticsEvent = {
       id: Math.random().toString(36).substring(7),
       name,
       timestamp: new Date().toISOString(),
-      params,
+      params: safeParams,
     };
-    
-    // Log for debugging
-    logger.info(`Analytics [${name}]`, params);
-    
+
+    logger.info(`Analytics [${name}]`, safeParams);
+
     notifyListeners(event);
-    
+
     // In a real app, this would send to Segment, Mixpanel, etc.
     if (process.env.NODE_ENV === "production") {
       // Send to real endpoint

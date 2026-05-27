@@ -91,12 +91,12 @@ export default function SignUpPage() {
     try {
       await signUp(email, name, password);
       setState("success");
-      mockAuditService.logEvent("signup", { email, name, timestamp: new Date().toISOString() });
+      mockAuditService.logEvent("signup", { status: "success", timestamp: new Date().toISOString() });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to create account";
       setErrors({ email: message });
       setState("idle");
-      mockAuditService.logEvent("signup", { email, status: "failed", reason: message });
+      mockAuditService.logEvent("signup", { status: "failed", reason: message });
     }
   };
 

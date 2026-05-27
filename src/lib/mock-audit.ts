@@ -1,6 +1,7 @@
 "use client";
 
 import { random } from "./seeded-rng";
+import { scrubPII } from "./logger";
 
 export interface AuditEvent {
     id: string;
@@ -32,7 +33,7 @@ export const mockAuditService: AuditService = {
             eventType,
             actor: "current_user",
             timestamp: new Date(),
-            metadata,
+            metadata: scrubPII(metadata),
             ipAddress: "192.168.1.1",
             userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "Unknown",
         };
