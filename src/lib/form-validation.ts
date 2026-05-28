@@ -72,3 +72,45 @@ export async function mockAsyncCheck({
   await new Promise((resolve) => setTimeout(resolve, delay));
   return shouldFail(value) ? message : undefined;
 }
+
+/**
+ * Debounced async validation helper to reduce race conditions.
+ * Returns a function that can be called multiple times but only executes
+ * the async check after the specified delay with no new calls.
+ */
+export function createDebouncedAsyncCheck(delay: number = 300) {
+  let timeoutId: NodeJS.Timeout | null = null;
+  let lastPromise: Promise<string | undefined> | null = null;
+
+  return async function debouncedCheck({
+    value,
+    shouldFail,
+    message,
+    asyncDelay = 450,
+  }: {
+    value: string;
+    shouldFail: (value: string) => boolean;
+    message: string;
+    asyncDelay?: number;
+  }): Promise<string | undefined> {
+    // Clear previous timeout
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
+    // Return a promise that resolves after debounce delay
+    lastPromise = new Promise((resolve) => {
+      timeoutId = setTimeout(async () => {
+        const result = await mockAsyncCheck({
+          value,
+          shouldFail,
+          message,
+          delay: asyncDelay,
+        });
+        resolve(result);
+      }, delay);
+    });
+
+    return lastPromise;
+  };
+}

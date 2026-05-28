@@ -30,8 +30,16 @@ export function CommandPaletteDialog({ onClose }: CommandPaletteDialogProps) {
   const listRef = useRef<HTMLUListElement>(null);
 
   const mockActions = [
-    { id: "action-logout", name: "Mock: Logout", action: () => alert("Logged Out") },
-    { id: "action-theme", name: "Mock: Toggle Theme", action: () => alert("Theme Toggled") },
+    {
+      id: "action-logout",
+      name: "Mock: Logout",
+      action: () => alert("Logged Out"),
+    },
+    {
+      id: "action-theme",
+      name: "Mock: Toggle Theme",
+      action: () => alert("Theme Toggled"),
+    },
   ];
 
   const allCommands: Command[] = [
@@ -67,7 +75,9 @@ export function CommandPaletteDialog({ onClose }: CommandPaletteDialogProps) {
 
   useEffect(() => {
     if (listRef.current && filteredCommands.length > 0) {
-      const activeElement = listRef.current.children[selectedIndex] as HTMLElement;
+      const activeElement = listRef.current.children[
+        selectedIndex
+      ] as HTMLElement;
       if (activeElement) {
         activeElement.scrollIntoView({ block: "nearest" });
       }
@@ -75,29 +85,39 @@ export function CommandPaletteDialog({ onClose }: CommandPaletteDialogProps) {
   }, [selectedIndex, filteredCommands.length]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (filteredCommands.length === 0) {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-      }
+    // Handle Escape regardless of results
+    if (e.key === "Escape") {
+      e.preventDefault();
+      onClose();
       return;
     }
+
+    // If no results, only Escape is handled (already returned above)
+    if (filteredCommands.length === 0) {
+      return;
+    }
+
+    // Ensure selectedIndex is valid (in case it got out of sync)
+    const validSelectedIndex = Math.min(
+      selectedIndex,
+      filteredCommands.length - 1,
+    );
 
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setSelectedIndex((prev) => (prev + 1) % filteredCommands.length);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev - 1 + filteredCommands.length) % filteredCommands.length);
+      setSelectedIndex(
+        (prev) =>
+          (prev - 1 + filteredCommands.length) % filteredCommands.length,
+      );
     } else if (e.key === "Enter") {
       e.preventDefault();
-      const selected = filteredCommands[selectedIndex];
+      const selected = filteredCommands[validSelectedIndex];
       if (selected) {
         selected.action();
       }
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      onClose();
     }
   };
 
@@ -127,7 +147,9 @@ export function CommandPaletteDialog({ onClose }: CommandPaletteDialogProps) {
             aria-autocomplete="list"
             aria-controls="command-palette-results"
             aria-activedescendant={
-              filteredCommands[selectedIndex] ? filteredCommands[selectedIndex].id : undefined
+              filteredCommands[selectedIndex]
+                ? filteredCommands[selectedIndex].id
+                : undefined
             }
           />
         </div>

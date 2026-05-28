@@ -1,11 +1,17 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent, useRef } from "react";
 import Link from "next/link";
 import { Check, CheckCircle2, X } from "lucide-react";
 import { useAuth } from "@/contexts";
 import { mockAuditService } from "@/lib/mock-audit";
-import { Button, Card, FieldError, FormErrorSummary, SectionError } from "@/components/ui";
+import {
+  Button,
+  Card,
+  FieldError,
+  FormErrorSummary,
+  SectionError,
+} from "@/components/ui";
 import {
   emailFormat,
   getErrorList,
@@ -14,6 +20,7 @@ import {
   mockAsyncCheck,
   required,
   type ValidationErrors,
+  createDebouncedAsyncCheck,
 } from "@/lib/form-validation";
 import { MAIN_CONTENT_LANDMARK_ID } from "@/lib/app-landmarks";
 
@@ -25,7 +32,11 @@ type SignUpState = "idle" | "loading" | "success";
 function getPasswordStrength(password: string) {
   if (!password) return { level: 0, label: "", color: "" };
   if (password.length < 8) return { level: 1, label: "Weak", color: "#ef4444" };
-  if (password.length < 12 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+  if (
+    password.length < 12 ||
+    !/[A-Z]/.test(password) ||
+    !/[0-9]/.test(password)
+  ) {
     return { level: 2, label: "Fair", color: "#f59e0b" };
   }
   if (!/[!@#$%^&*]/.test(password)) {
@@ -43,8 +54,13 @@ export default function SignUpPage() {
   const [state, setState] = useState<SignUpState>("idle");
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<ValidationErrors<SignUpField>>({});
+  const [emailValidating, setEmailValidating] = useState(false);
+  const debouncedAsyncCheckRef = useRef(createDebouncedAsyncCheck(300));
 
-  const passwordStrength = useMemo(() => getPasswordStrength(password), [password]);
+  const passwordStrength = useMemo(
+    () => getPasswordStrength(password),
+    [password],
+  );
 
   const validateSync = () => {
     const nextErrors: ValidationErrors<SignUpField> = {
@@ -57,11 +73,37 @@ export default function SignUpPage() {
       password:
         required(password, "Password is required") ||
         minLength(password, 8, "Password must be at least 8 characters"),
-      terms: termsAccepted ? undefined : "Accept the terms and privacy policy to continue",
+      terms: termsAccepted
+        ? undefined
+        : "Accept the terms and privacy policy to continue",
     };
 
     setErrors(nextErrors);
     return nextErrors;
+  };
+
+  const validateEmailAsync = async (value: string) => {
+    if (!value.trim()) {
+      setEmailValidating(false);
+      return;
+    }
+
+    setEmailValidating(true);
+
+    const error = await debouncedAsyncCheckRef.current({
+      value,
+      shouldFail: (v) => v.toLowerCase().includes("taken"),
+      message:
+        "That email is reserved in this mock flow. Try an address without 'taken'.",
+      asyncDelay: 550,
+    });
+
+    setEmailValidating(false);
+    if (error) {
+      setErrors((current) => ({ ...current, email: error }));
+    } else {
+      setErrors((current) => ({ ...current, email: undefined }));
+    }
   };
 
   const handleSubmit = async (event: FormEvent) => {
@@ -73,30 +115,48 @@ export default function SignUpPage() {
       return;
     }
 
-    setState("loading");
+    // Wait for async validation to complete if in progress
+    if (emailValidating) {
+      await new Promise((resolve) => {
+        const checkInterval = setInterval(() => {
+          setEmailValidating((current) => {
+            if (!current) {
+              clearInterval(checkInterval);
+              resolve(null);
+            }
+            return current;
+          });
+        }, 50);
+      });
+    }
 
-    const asyncEmailError = await mockAsyncCheck({
-      value: email,
-      shouldFail: (value) => value.toLowerCase().includes("taken"),
-      message: "That email is reserved in this mock flow. Try an address without 'taken'.",
-      delay: 550,
+    // Check if there are any async validation errors
+    setErrors((current) => {
+      if (current.email) {
+        setState("idle");
+        return current;
+      }
+      return current;
     });
 
-    if (asyncEmailError) {
-      setErrors({ email: asyncEmailError });
-      setState("idle");
-      return;
-    }
+    setState("loading");
 
     try {
       await signUp(email, name, password);
       setState("success");
-      mockAuditService.logEvent("signup", { status: "success", timestamp: new Date().toISOString() });
+      mockAuditService.logEvent("signup", {
+        status: "success",
+        timestamp: new Date().toISOString(),
+      });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to create account";
+      const message =
+        error instanceof Error ? error.message : "Failed to create account";
       setErrors({ email: message });
       setState("idle");
-      mockAuditService.logEvent("signup", { status: "failed", reason: message });
+      mockAuditService.logEvent("signup", {
+        status: "failed",
+        reason: message,
+      });
     }
   };
 
@@ -134,7 +194,9 @@ export default function SignUpPage() {
             className="flex items-center gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-emerald-200"
           >
             <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
-            <span className="text-sm">Account created successfully. Redirecting...</span>
+            <span className="text-sm">
+              Account created successfully. Redirecting...
+            </span>
           </div>
         ) : null}
 
@@ -174,29 +236,39 @@ export default function SignUpPage() {
             >
               Email Address
             </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(event) => {
-                setEmail(event.target.value);
-                setErrors((current) => ({ ...current, email: undefined }));
-              }}
-              disabled={isLoading || isSuccess}
-              aria-invalid={Boolean(errors.email)}
-              aria-describedby={joinDescribedBy(
-                "signup-email-hint",
-                errors.email ? "signup-email-error" : undefined,
+            <div className="relative">
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  setErrors((current) => ({ ...current, email: undefined }));
+                  validateEmailAsync(event.target.value);
+                }}
+                disabled={isLoading || isSuccess}
+                aria-invalid={Boolean(errors.email)}
+                aria-describedby={joinDescribedBy(
+                  "signup-email-hint",
+                  errors.email ? "signup-email-error" : undefined,
+                )}
+                aria-busy={emailValidating}
+                className={`w-full rounded-xl border bg-slate-950/40 px-4 py-3 text-sm text-slate-100 outline-none transition ${
+                  errors.email
+                    ? "border-red-500/60 focus:border-red-500 focus:ring-2 focus:ring-red-500/15"
+                    : "border-slate-700/60 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/15"
+                }`}
+                placeholder="name@example.com"
+              />
+              {emailValidating && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-sky-400/30 border-t-sky-400" />
+                </div>
               )}
-              className={`w-full rounded-xl border bg-slate-950/40 px-4 py-3 text-sm text-slate-100 outline-none transition ${
-                errors.email
-                  ? "border-red-500/60 focus:border-red-500 focus:ring-2 focus:ring-red-500/15"
-                  : "border-slate-700/60 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/15"
-              }`}
-              placeholder="name@example.com"
-            />
+            </div>
             <p id="signup-email-hint" className="mt-2 text-sm text-slate-500">
-              Async mock check: addresses containing <span className="font-mono">taken</span> are rejected.
+              Async mock check: addresses containing{" "}
+              <span className="font-mono">taken</span> are rejected.
             </p>
             <FieldError id="signup-email-error" message={errors.email} />
           </div>
@@ -216,7 +288,10 @@ export default function SignUpPage() {
                   value={password}
                   onChange={(event) => {
                     setPassword(event.target.value);
-                    setErrors((current) => ({ ...current, password: undefined }));
+                    setErrors((current) => ({
+                      ...current,
+                      password: undefined,
+                    }));
                   }}
                   disabled={isLoading || isSuccess}
                   aria-invalid={Boolean(errors.password)}
@@ -231,7 +306,10 @@ export default function SignUpPage() {
                   }`}
                   placeholder="Create a strong password"
                 />
-                <FieldError id="signup-password-error" message={errors.password} />
+                <FieldError
+                  id="signup-password-error"
+                  message={errors.password}
+                />
 
                 {password ? (
                   <div
@@ -258,10 +336,19 @@ export default function SignUpPage() {
 
                 <div className="mt-3 space-y-2 rounded-xl border border-slate-700/50 bg-slate-950/35 p-4 text-sm text-slate-400">
                   {[
-                    { ok: password.length >= 8, label: "At least 8 characters" },
-                    { ok: /[A-Z]/.test(password), label: "One uppercase letter" },
+                    {
+                      ok: password.length >= 8,
+                      label: "At least 8 characters",
+                    },
+                    {
+                      ok: /[A-Z]/.test(password),
+                      label: "One uppercase letter",
+                    },
                     { ok: /[0-9]/.test(password), label: "One number" },
-                    { ok: /[!@#$%^&*]/.test(password), label: "One special character" },
+                    {
+                      ok: /[!@#$%^&*]/.test(password),
+                      label: "One special character",
+                    },
                   ].map((rule) => (
                     <div
                       key={rule.label}
@@ -286,20 +373,31 @@ export default function SignUpPage() {
                     checked={termsAccepted}
                     onChange={(event) => {
                       setTermsAccepted(event.target.checked);
-                      setErrors((current) => ({ ...current, terms: undefined }));
+                      setErrors((current) => ({
+                        ...current,
+                        terms: undefined,
+                      }));
                     }}
                     disabled={isLoading || isSuccess}
                     aria-invalid={Boolean(errors.terms)}
-                    aria-describedby={errors.terms ? "signup-terms-error" : undefined}
+                    aria-describedby={
+                      errors.terms ? "signup-terms-error" : undefined
+                    }
                     className="mt-0.5 h-4 w-4 accent-sky-400"
                   />
                   <span>
                     I agree to the{" "}
-                    <a href="#" className="font-semibold text-sky-300 hover:text-sky-200">
+                    <a
+                      href="#"
+                      className="font-semibold text-sky-300 hover:text-sky-200"
+                    >
                       Terms of Service
                     </a>{" "}
                     and{" "}
-                    <a href="#" className="font-semibold text-sky-300 hover:text-sky-200">
+                    <a
+                      href="#"
+                      className="font-semibold text-sky-300 hover:text-sky-200"
+                    >
                       Privacy Policy
                     </a>
                     .
@@ -313,17 +411,24 @@ export default function SignUpPage() {
           <Button
             type="submit"
             size="lg"
-            disabled={isLoading || isSuccess}
+            disabled={isLoading || isSuccess || emailValidating}
             aria-busy={isLoading}
             className="w-full justify-center"
           >
-            {isLoading ? "Creating Account..." : isSuccess ? "Redirecting..." : "Sign Up"}
+            {isLoading
+              ? "Creating Account..."
+              : isSuccess
+                ? "Redirecting..."
+                : "Sign Up"}
           </Button>
         </form>
 
         <footer className="border-t border-slate-700/50 pt-5 text-center text-sm text-slate-400">
           Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-sky-300 hover:text-sky-200">
+          <Link
+            href="/login"
+            className="font-semibold text-sky-300 hover:text-sky-200"
+          >
             Sign In
           </Link>
         </footer>

@@ -8,6 +8,7 @@ export { EmptyState, default as EmptyStateCompact } from "./EmptyState";
 export * from "./ErrorBlock";
 export * from "./ErrorPage";
 export * from "./FormErrors";
+export * from "./FormField";
 export * from "./Input";
 export * from "./InlineBanner";
 export * from "./Modal";
