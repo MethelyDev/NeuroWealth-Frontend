@@ -12,6 +12,11 @@ import {
 } from '@stellar/stellar-sdk';
 import { ISupportedWallet } from "@creit.tech/stellar-wallets-kit";
 import { kit } from '../lib/stellar-wallet-kit';
+import {
+  clearPersistedWalletState,
+  persistWalletState,
+  readPersistedWalletState,
+} from '@/lib/wallet-persistence';
 
 const Server = Horizon.Server;
 
@@ -83,12 +88,13 @@ export function WalletProvider({
           setWalletName(name);
           setConnected(true);
 
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('stellar_wallet_connected', 'true');
-            localStorage.setItem('stellar_wallet_id', option.id);
-            localStorage.setItem('stellar_wallet_address', address);
-            localStorage.setItem('stellar_wallet_name', name);
-          }
+          persistWalletState({
+            connected: true,
+            providerId: option.id,
+            publicKey: address,
+            displayName: name,
+            networkPassphrase: network,
+          });
 
           try {
             const account = await server.accounts().accountId(address).call();
