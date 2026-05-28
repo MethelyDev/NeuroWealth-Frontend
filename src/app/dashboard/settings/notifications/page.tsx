@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, Bell, Mail, Save, ShieldAlert, X } from "lucide-react";
 import { useToast } from "@/components/notifications/ToastProvider";
+import { useI18n } from "@/contexts/I18nContext";
 
 export const dynamic = "force-dynamic";
 import { Button, Card, InlineBanner } from "@/components/ui";
@@ -66,6 +67,8 @@ function PreferenceToggle({
 
 export default function NotificationsSettingsPage() {
   const { pushToast } = useToast();
+  const { messages } = useI18n();
+  const t = messages.settings.notifications;
   const [saved, setSaved] = useState(DEFAULT_PREFERENCES);
   const [draft, setDraft] = useState(DEFAULT_PREFERENCES);
   const [editing, setEditing] = useState(false);
@@ -127,16 +130,16 @@ export default function NotificationsSettingsPage() {
       mockAuditService.logEvent("settings_change", { section: "notifications", changes: draft });
       pushToast({
         variant: "success",
-        title: "Preferences saved",
-        description: "Your notification rules were updated for future account activity.",
+        title: t.toast.savedTitle,
+        description: t.toast.savedDesc,
         duration: 4000,
       });
     } catch {
       setStatus("error");
       pushToast({
         variant: "error",
-        title: "Save failed",
-        description: "Security alerts are required in this mocked flow. Re-enable them and try again.",
+        title: t.toast.failTitle,
+        description: t.toast.failDesc,
         duration: 6000,
       });
     } finally {
@@ -147,10 +150,8 @@ export default function NotificationsSettingsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold text-slate-100">Notifications</h1>
-        <p className="text-sm text-slate-400">
-          Manage the alerts we send across email, account activity, and security events.
-        </p>
+        <h1 className="text-2xl font-bold text-slate-100">{t.title}</h1>
+        <p className="text-sm text-slate-400">{t.subtitle}</p>
       </div>
 
       <InlineBanner
@@ -167,7 +168,7 @@ export default function NotificationsSettingsPage() {
       </InlineBanner>
 
       {status === "success" ? (
-        <InlineBanner variant="success" title="Notification preferences saved">
+        <InlineBanner variant="success" title={t.banner.savedTitle}>
           The changes were persisted locally and announced through the global toast queue.
         </InlineBanner>
       ) : null}
@@ -175,7 +176,7 @@ export default function NotificationsSettingsPage() {
       {status === "error" ? (
         <InlineBanner
           variant="error"
-          title="Unable to save your current selection"
+          title={t.banner.failTitle}
           action={
             <Button
               variant="secondary"
@@ -186,7 +187,7 @@ export default function NotificationsSettingsPage() {
                 }
               }}
             >
-              Restore security alerts
+              {t.actions.restoreAlerts}
             </Button>
           }
         >
@@ -195,8 +196,8 @@ export default function NotificationsSettingsPage() {
       ) : null}
 
       {!draft.securityAlerts ? (
-        <InlineBanner variant="warning" title="Security alerts are turned off">
-          High-risk account events may be missed until you re-enable security coverage.
+        <InlineBanner variant="warning" title={t.securityAlertsOff.title}>
+          {t.securityAlertsOff.desc}
         </InlineBanner>
       ) : null}
 
@@ -207,50 +208,48 @@ export default function NotificationsSettingsPage() {
               <Mail className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-slate-100">Delivery channels</h2>
-              <p className="mt-1 text-sm text-slate-400">
-                Choose which updates reach inboxes, dashboards, and weekly summaries.
-              </p>
+              <h2 className="text-lg font-semibold text-slate-100">{t.channels.title}</h2>
+              <p className="mt-1 text-sm text-slate-400">{t.channels.desc}</p>
             </div>
           </div>
 
           <div className="space-y-3">
             <PreferenceToggle
               id="email-notifications"
-              title="Email notifications"
-              description="Receive delivery updates and account notices in your inbox."
+              title={t.channels.emailTitle}
+              description={t.channels.emailDesc}
               checked={draft.emailNotifications}
               disabled={!editing}
               onChange={() => togglePreference("emailNotifications")}
             />
             <PreferenceToggle
               id="transaction-alerts"
-              title="Transaction alerts"
-              description="Send a notification whenever a deposit, withdrawal, or rebalance completes."
+              title={t.channels.transactionTitle}
+              description={t.channels.transactionDesc}
               checked={draft.transactionAlerts}
               disabled={!editing || !draft.emailNotifications}
               onChange={() => togglePreference("transactionAlerts")}
             />
             <PreferenceToggle
               id="weekly-digest"
-              title="Weekly digest"
-              description="Bundle performance summaries and highlights into a single weekly update."
+              title={t.channels.weeklyTitle}
+              description={t.channels.weeklyDesc}
               checked={draft.weeklyDigest}
               disabled={!editing || !draft.emailNotifications}
               onChange={() => togglePreference("weeklyDigest")}
             />
             <PreferenceToggle
               id="marketing-emails"
-              title="Product updates"
-              description="Hear about launches, experiments, and platform improvements."
+              title={t.channels.productTitle}
+              description={t.channels.productDesc}
               checked={draft.marketingEmails}
               disabled={!editing || !draft.emailNotifications}
               onChange={() => togglePreference("marketingEmails")}
             />
             <PreferenceToggle
               id="security-alerts"
-              title="Security alerts"
-              description="Critical sign-in, wallet, and suspicious-activity notifications."
+              title={t.channels.securityTitle}
+              description={t.channels.securityDesc}
               checked={draft.securityAlerts}
               disabled={!editing}
               onChange={() => togglePreference("securityAlerts")}
@@ -265,26 +264,24 @@ export default function NotificationsSettingsPage() {
                 <Bell className="h-4 w-4" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-slate-100">Current summary</h2>
-                <p className="mt-1 text-sm text-slate-400">
-                  Track enabled signals before publishing changes.
-                </p>
+                <h2 className="text-lg font-semibold text-slate-100">{t.summary.title}</h2>
+                <p className="mt-1 text-sm text-slate-400">{t.summary.desc}</p>
               </div>
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between rounded-xl border border-slate-700/50 bg-slate-950/35 px-4 py-3 text-sm">
-                <span className="text-slate-300">Enabled preferences</span>
+                <span className="text-slate-300">{t.summary.enabledPreferences}</span>
                 <span className="font-semibold text-sky-300">{enabledCount} / 5</span>
               </div>
               <div className="flex items-center justify-between rounded-xl border border-slate-700/50 bg-slate-950/35 px-4 py-3 text-sm">
-                <span className="text-slate-300">Email channel</span>
+                <span className="text-slate-300">{t.summary.emailChannel}</span>
                 <span className="font-semibold text-slate-100">
-                  {draft.emailNotifications ? "Active" : "Muted"}
+                  {draft.emailNotifications ? t.summary.active : t.summary.muted}
                 </span>
               </div>
               <div className="flex items-center justify-between rounded-xl border border-slate-700/50 bg-slate-950/35 px-4 py-3 text-sm">
-                <span className="text-slate-300">Security coverage</span>
+                <span className="text-slate-300">{t.summary.securityCoverage}</span>
                 <span
                   className={
                     draft.securityAlerts
@@ -292,7 +289,7 @@ export default function NotificationsSettingsPage() {
                       : "font-semibold text-amber-300"
                   }
                 >
-                  {draft.securityAlerts ? "Protected" : "At risk"}
+                  {draft.securityAlerts ? t.summary.protected : t.summary.atRisk}
                 </span>
               </div>
             </div>
@@ -304,10 +301,8 @@ export default function NotificationsSettingsPage() {
                 <ShieldAlert className="h-4 w-4" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-slate-100">Save behavior</h2>
-                <p className="mt-1 text-sm text-slate-400">
-                  Successful saves emit a success banner and toast. Disabling security alerts simulates a blocked save.
-                </p>
+                <h2 className="text-lg font-semibold text-slate-100">{t.saveBehavior.title}</h2>
+                <p className="mt-1 text-sm text-slate-400">{t.saveBehavior.desc}</p>
               </div>
             </div>
           </Card>
@@ -317,7 +312,7 @@ export default function NotificationsSettingsPage() {
       {!editing ? (
         <div>
           <Button variant="secondary" onClick={() => setEditing(true)}>
-            Edit Preferences
+            {t.actions.edit}
           </Button>
         </div>
       ) : (
@@ -328,16 +323,16 @@ export default function NotificationsSettingsPage() {
         >
           <div className="flex items-center gap-2 text-sm text-amber-300">
             <AlertCircle className="h-4 w-4" />
-            <span>{isDirty ? "Unsaved changes" : "No pending changes"}</span>
+            <span>{isDirty ? t.actions.unsaved : t.actions.noPending}</span>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button variant="ghost" onClick={handleCancel} disabled={saving}>
               <X className="h-4 w-4" />
-              Cancel
+              {t.actions.cancel}
             </Button>
             <Button onClick={handleSave} disabled={saving || !isDirty} aria-busy={saving}>
               <Save className="h-4 w-4" />
-              {saving ? "Saving..." : "Save Changes"}
+              {saving ? t.actions.saving : t.actions.save}
             </Button>
           </div>
         </div>

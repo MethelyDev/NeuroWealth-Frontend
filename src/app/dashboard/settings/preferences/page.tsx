@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 import { mockAuditService } from "@/lib/mock-audit";
 import { SettingsSectionSkeleton } from "@/components/ui/Skeleton";
 import { useTheme, ThemeMode } from "@/contexts/ThemeProvider";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface PreferencesData {
   locale: string;
@@ -54,6 +55,8 @@ const DEFAULT: PreferencesData = {
 };
 
 export default function PreferencesPage() {
+  const { messages } = useI18n();
+  const t = messages.settings.preferences;
   const [saved, setSaved] = useState<PreferencesData>(DEFAULT);
   const [draft, setDraft] = useState<PreferencesData>(DEFAULT);
   const [editing, setEditing] = useState(false);
@@ -110,22 +113,22 @@ export default function PreferencesPage() {
     <div className="preferences-page">
       <div className="settings-header">
         <div>
-          <h1 className="settings-title">Preferences</h1>
-          <p className="settings-subtitle">Manage language, timezone, and currency settings</p>
+          <h1 className="settings-title">{t.title}</h1>
+          <p className="settings-subtitle">{t.subtitle}</p>
         </div>
       </div>
 
       {status === "success" && (
         <div className="settings-banner settings-banner-success" role="status">
           <CheckCircle2 size={16} />
-          <span>Preferences saved successfully</span>
+          <span>{t.savedSuccess}</span>
         </div>
       )}
 
       {status === "error" && (
         <div className="settings-banner settings-banner-error" role="alert">
           <AlertCircle size={16} />
-          <span>Failed to save preferences. Please try again.</span>
+          <span>{t.saveError}</span>
         </div>
       )}
 
@@ -135,15 +138,15 @@ export default function PreferencesPage() {
             <Globe size={18} />
           </div>
           <div>
-            <h2 className="settings-card-title">Localisation</h2>
-            <p className="settings-card-desc">Language and regional display preferences</p>
+            <h2 className="settings-card-title">{t.localisation.title}</h2>
+            <p className="settings-card-desc">{t.localisation.desc}</p>
           </div>
         </div>
 
         <div className="settings-card-body">
           <div className="settings-field">
             <label htmlFor="locale" className="settings-label">
-              Locale
+              {t.localisation.localeLabel}
             </label>
             {editing ? (
               <select
@@ -173,15 +176,15 @@ export default function PreferencesPage() {
             <Monitor size={18} />
           </div>
           <div>
-            <h2 className="settings-card-title">Appearance</h2>
-            <p className="settings-card-desc">Theme and visual display preferences</p>
+            <h2 className="settings-card-title">{t.appearance.title}</h2>
+            <p className="settings-card-desc">{t.appearance.desc}</p>
           </div>
         </div>
 
         <div className="settings-card-body">
           <div className="settings-field">
             <label className="settings-label">
-              Theme
+              {t.appearance.themeLabel}
             </label>
             {editing ? (
               <div className="theme-options">
@@ -191,7 +194,7 @@ export default function PreferencesPage() {
                   className={`theme-option ${draft.theme === "light" ? "active" : ""}`}
                 >
                   <Sun size={16} />
-                  <span>Light</span>
+                  <span>{t.appearance.light}</span>
                 </button>
                 <button
                   type="button"
@@ -199,7 +202,7 @@ export default function PreferencesPage() {
                   className={`theme-option ${draft.theme === "dark" ? "active" : ""}`}
                 >
                   <Moon size={16} />
-                  <span>Dark</span>
+                  <span>{t.appearance.dark}</span>
                 </button>
                 <button
                   type="button"
@@ -207,14 +210,14 @@ export default function PreferencesPage() {
                   className={`theme-option ${draft.theme === "system" ? "active" : ""}`}
                 >
                   <Monitor size={16} />
-                  <span>System</span>
+                  <span>{t.appearance.system}</span>
                 </button>
               </div>
             ) : (
               <p className="settings-value">
-                {saved.theme === "light" && "Light"}
-                {saved.theme === "dark" && "Dark"}
-                {saved.theme === "system" && "System"}
+                {saved.theme === "light" && t.appearance.light}
+                {saved.theme === "dark" && t.appearance.dark}
+                {saved.theme === "system" && t.appearance.system}
               </p>
             )}
           </div>
@@ -227,15 +230,15 @@ export default function PreferencesPage() {
             <Clock size={18} />
           </div>
           <div>
-            <h2 className="settings-card-title">Time & Currency</h2>
-            <p className="settings-card-desc">Timezone and numeric format settings</p>
+            <h2 className="settings-card-title">{t.timeCurrency.title}</h2>
+            <p className="settings-card-desc">{t.timeCurrency.desc}</p>
           </div>
         </div>
 
         <div className="settings-card-body">
           <div className="settings-field">
             <label htmlFor="timezone" className="settings-label">
-              Timezone
+              {t.timeCurrency.timezoneLabel}
             </label>
             {editing ? (
               <select
@@ -259,7 +262,7 @@ export default function PreferencesPage() {
 
           <div className="settings-field">
             <label htmlFor="currency" className="settings-label">
-              Currency Format
+              {t.timeCurrency.currencyLabel}
             </label>
             {editing ? (
               <select
@@ -286,28 +289,28 @@ export default function PreferencesPage() {
 
       {!editing && (
         <Button onClick={() => setEditing(true)} variant="secondary" size="md">
-          Edit Preferences
+          {t.actions.edit}
         </Button>
       )}
 
       {editing && (
         <div className="settings-action-bar" role="group" aria-label="Save or cancel changes">
-          {isDirty && <span className="settings-dirty-indicator">Unsaved changes</span>}
+          {isDirty && <span className="settings-dirty-indicator">{t.actions.unsaved}</span>}
           <div className="settings-actions">
             <Button onClick={handleCancel} variant="ghost" size="md" disabled={saving}>
               <X size={16} />
-              Cancel
+              {t.actions.cancel}
             </Button>
             <Button onClick={handleSave} size="md" disabled={saving} aria-busy={saving}>
               {saving ? (
                 <>
                   <span className="settings-spinner" aria-hidden="true" />
-                  Saving…
+                  {t.actions.saving}
                 </>
               ) : (
                 <>
                   <Save size={16} />
-                  Save Changes
+                  {t.actions.save}
                 </>
               )}
             </Button>

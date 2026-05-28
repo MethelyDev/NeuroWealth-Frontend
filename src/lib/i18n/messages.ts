@@ -106,6 +106,97 @@ export interface AppMessages {
   formatters: {
     updatedPrefix: string;
   };
+  settings: {
+    preferences: {
+      title: string;
+      subtitle: string;
+      savedSuccess: string;
+      saveError: string;
+      localisation: {
+        title: string;
+        desc: string;
+        localeLabel: string;
+      };
+      appearance: {
+        title: string;
+        desc: string;
+        themeLabel: string;
+        light: string;
+        dark: string;
+        system: string;
+      };
+      timeCurrency: {
+        title: string;
+        desc: string;
+        timezoneLabel: string;
+        currencyLabel: string;
+      };
+      actions: {
+        edit: string;
+        unsaved: string;
+        cancel: string;
+        save: string;
+        saving: string;
+      };
+    };
+    notifications: {
+      title: string;
+      subtitle: string;
+      channels: {
+        title: string;
+        desc: string;
+        emailTitle: string;
+        emailDesc: string;
+        transactionTitle: string;
+        transactionDesc: string;
+        weeklyTitle: string;
+        weeklyDesc: string;
+        productTitle: string;
+        productDesc: string;
+        securityTitle: string;
+        securityDesc: string;
+      };
+      summary: {
+        title: string;
+        desc: string;
+        enabledPreferences: string;
+        emailChannel: string;
+        active: string;
+        muted: string;
+        securityCoverage: string;
+        protected: string;
+        atRisk: string;
+      };
+      saveBehavior: {
+        title: string;
+        desc: string;
+      };
+      securityAlertsOff: {
+        title: string;
+        desc: string;
+      };
+      actions: {
+        edit: string;
+        unsaved: string;
+        noPending: string;
+        cancel: string;
+        save: string;
+        saving: string;
+        restoreAlerts: string;
+      };
+      toast: {
+        savedTitle: string;
+        savedDesc: string;
+        failTitle: string;
+        failDesc: string;
+      };
+      banner: {
+        savedTitle: string;
+        failTitle: string;
+        failDesc: string;
+      };
+    };
+  };
 }
 
 export const localeToIntl: Record<AppLocale, string> = {
@@ -320,6 +411,97 @@ export const dictionaries: Record<AppLocale, AppMessages> = {
     formatters: {
       updatedPrefix: "Updated",
     },
+    settings: {
+      preferences: {
+        title: "Preferences",
+        subtitle: "Manage language, timezone, and currency settings",
+        savedSuccess: "Preferences saved successfully",
+        saveError: "Failed to save preferences. Please try again.",
+        localisation: {
+          title: "Localisation",
+          desc: "Language and regional display preferences",
+          localeLabel: "Locale",
+        },
+        appearance: {
+          title: "Appearance",
+          desc: "Theme and visual display preferences",
+          themeLabel: "Theme",
+          light: "Light",
+          dark: "Dark",
+          system: "System",
+        },
+        timeCurrency: {
+          title: "Time & Currency",
+          desc: "Timezone and numeric format settings",
+          timezoneLabel: "Timezone",
+          currencyLabel: "Currency Format",
+        },
+        actions: {
+          edit: "Edit Preferences",
+          unsaved: "Unsaved changes",
+          cancel: "Cancel",
+          save: "Save Changes",
+          saving: "Saving…",
+        },
+      },
+      notifications: {
+        title: "Notifications",
+        subtitle: "Manage the alerts we send across email, account activity, and security events.",
+        channels: {
+          title: "Delivery channels",
+          desc: "Choose which updates reach inboxes, dashboards, and weekly summaries.",
+          emailTitle: "Email notifications",
+          emailDesc: "Receive delivery updates and account notices in your inbox.",
+          transactionTitle: "Transaction alerts",
+          transactionDesc: "Send a notification whenever a deposit, withdrawal, or rebalance completes.",
+          weeklyTitle: "Weekly digest",
+          weeklyDesc: "Bundle performance summaries and highlights into a single weekly update.",
+          productTitle: "Product updates",
+          productDesc: "Hear about launches, experiments, and platform improvements.",
+          securityTitle: "Security alerts",
+          securityDesc: "Critical sign-in, wallet, and suspicious-activity notifications.",
+        },
+        summary: {
+          title: "Current summary",
+          desc: "Track enabled signals before publishing changes.",
+          enabledPreferences: "Enabled preferences",
+          emailChannel: "Email channel",
+          active: "Active",
+          muted: "Muted",
+          securityCoverage: "Security coverage",
+          protected: "Protected",
+          atRisk: "At risk",
+        },
+        saveBehavior: {
+          title: "Save behavior",
+          desc: "Successful saves emit a success banner and toast. Disabling security alerts simulates a blocked save.",
+        },
+        securityAlertsOff: {
+          title: "Security alerts are turned off",
+          desc: "High-risk account events may be missed until you re-enable security coverage.",
+        },
+        actions: {
+          edit: "Edit Preferences",
+          unsaved: "Unsaved changes",
+          noPending: "No pending changes",
+          cancel: "Cancel",
+          save: "Save Changes",
+          saving: "Saving...",
+          restoreAlerts: "Restore security alerts",
+        },
+        toast: {
+          savedTitle: "Preferences saved",
+          savedDesc: "Your notification rules were updated for future account activity.",
+          failTitle: "Save failed",
+          failDesc: "Security alerts are required in this mocked flow. Re-enable them and try again.",
+        },
+        banner: {
+          savedTitle: "Notification preferences saved",
+          failTitle: "Unable to save your current selection",
+          failDesc: "This mocked failure path intentionally blocks saving while security alerts are disabled.",
+        },
+      },
+    },
   },
   fr: {
     locale: {
@@ -528,6 +710,97 @@ export const dictionaries: Record<AppLocale, AppMessages> = {
     },
     formatters: {
       updatedPrefix: "Mis à jour",
+    },
+    settings: {
+      preferences: {
+        title: "Préférences",
+        subtitle: "Gérer la langue, le fuseau horaire et les paramètres de devise",
+        savedSuccess: "Préférences enregistrées avec succès",
+        saveError: "Échec de l'enregistrement des préférences. Veuillez réessayer.",
+        localisation: {
+          title: "Localisation",
+          desc: "Préférences de langue et d'affichage régional",
+          localeLabel: "Paramètre régional",
+        },
+        appearance: {
+          title: "Apparence",
+          desc: "Préférences de thème et d'affichage visuel",
+          themeLabel: "Thème",
+          light: "Clair",
+          dark: "Sombre",
+          system: "Système",
+        },
+        timeCurrency: {
+          title: "Heure et devise",
+          desc: "Fuseau horaire et format numérique",
+          timezoneLabel: "Fuseau horaire",
+          currencyLabel: "Format de devise",
+        },
+        actions: {
+          edit: "Modifier les préférences",
+          unsaved: "Modifications non enregistrées",
+          cancel: "Annuler",
+          save: "Enregistrer",
+          saving: "Enregistrement…",
+        },
+      },
+      notifications: {
+        title: "Notifications",
+        subtitle: "Gérer les alertes que nous envoyons par e-mail, activité du compte et événements de sécurité.",
+        channels: {
+          title: "Canaux de diffusion",
+          desc: "Choisissez les mises à jour qui arrivent dans vos boîtes de réception, tableaux de bord et résumés hebdomadaires.",
+          emailTitle: "Notifications par e-mail",
+          emailDesc: "Recevez les mises à jour de livraison et les avis de compte dans votre boîte de réception.",
+          transactionTitle: "Alertes de transaction",
+          transactionDesc: "Envoyer une notification à chaque dépôt, retrait ou rééquilibrage complété.",
+          weeklyTitle: "Résumé hebdomadaire",
+          weeklyDesc: "Regrouper les résumés de performance et les points saillants en une mise à jour hebdomadaire.",
+          productTitle: "Mises à jour du produit",
+          productDesc: "Découvrez les lancements, les expériences et les améliorations de la plateforme.",
+          securityTitle: "Alertes de sécurité",
+          securityDesc: "Notifications critiques de connexion, de portefeuille et d'activité suspecte.",
+        },
+        summary: {
+          title: "Résumé actuel",
+          desc: "Suivez les signaux activés avant de publier les modifications.",
+          enabledPreferences: "Préférences activées",
+          emailChannel: "Canal e-mail",
+          active: "Actif",
+          muted: "Désactivé",
+          securityCoverage: "Couverture de sécurité",
+          protected: "Protégé",
+          atRisk: "À risque",
+        },
+        saveBehavior: {
+          title: "Comportement de sauvegarde",
+          desc: "Les sauvegardes réussies émettent une bannière de succès et un toast. Désactiver les alertes de sécurité simule une sauvegarde bloquée.",
+        },
+        securityAlertsOff: {
+          title: "Les alertes de sécurité sont désactivées",
+          desc: "Les événements de compte à haut risque peuvent être manqués jusqu'à ce que vous réactiviez la couverture de sécurité.",
+        },
+        actions: {
+          edit: "Modifier les préférences",
+          unsaved: "Modifications non enregistrées",
+          noPending: "Aucune modification en attente",
+          cancel: "Annuler",
+          save: "Enregistrer",
+          saving: "Enregistrement...",
+          restoreAlerts: "Restaurer les alertes de sécurité",
+        },
+        toast: {
+          savedTitle: "Préférences enregistrées",
+          savedDesc: "Vos règles de notification ont été mises à jour pour les futures activités du compte.",
+          failTitle: "Échec de l'enregistrement",
+          failDesc: "Les alertes de sécurité sont requises dans ce flux simulé. Réactivez-les et réessayez.",
+        },
+        banner: {
+          savedTitle: "Préférences de notification enregistrées",
+          failTitle: "Impossible d'enregistrer votre sélection actuelle",
+          failDesc: "Ce chemin d'échec simulé bloque intentionnellement la sauvegarde lorsque les alertes de sécurité sont désactivées.",
+        },
+      },
     },
   },
 };

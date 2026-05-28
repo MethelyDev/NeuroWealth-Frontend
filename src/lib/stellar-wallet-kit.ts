@@ -25,7 +25,7 @@ export const getKit = (): StellarWalletsKit => {
   }
   
   if (!kitInstance) {
-    const modules: any[] = [];
+    const modules: Array<FreighterModule | AlbedoModule | LobstrModule | xBullModule | HanaModule> = [];
     const walletList = Array.isArray(INJECTED_WALLETS) ? INJECTED_WALLETS : ['freighter', 'albedo', 'lobstr'];
 
     if (walletList.includes('freighter')) modules.push(new FreighterModule());
