@@ -11,7 +11,9 @@
     "test": "TZ=UTC node --import tsx --test \"src/**/*.test.ts\"",
     "qa:visual-baseline": "node scripts/capture-visual-baselines.mjs",
     "lint": "next lint",
-    "validate:env": "tsx scripts/validate-env.ts",
+    "validate:env": "yarn validate:env:server && yarn validate:env:frontend",
+    "validate:env:server": "tsx scripts/validate-env.ts",
+    "validate:env:frontend": "tsx scripts/validate-frontend-env.ts",
     "analyze": "ANALYZE=true next build"
   },
   "dependencies": {
