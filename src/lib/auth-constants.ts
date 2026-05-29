@@ -92,5 +92,7 @@ export function isProtectedPath(pathname: string): boolean {
 
 /** Checks whether a pathname should redirect already-authenticated users */
 export function isAuthOnlyPath(pathname: string): boolean {
-  return AUTH_ONLY_PATHS.some((p) => pathname === p || pathname.startsWith(p));
+  return AUTH_ONLY_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(p + "/"),
+  );
 }

@@ -33,7 +33,10 @@ export function middleware(request: NextRequest) {
 
   if (!authenticated && isProtectedPath(url.pathname)) {
     url.pathname = SIGN_IN_PATH;
-    url.searchParams.set("from", `${request.nextUrl.pathname}${request.nextUrl.search}`);
+    url.searchParams.set(
+      "from",
+      `${request.nextUrl.pathname}${request.nextUrl.search}`,
+    );
     return NextResponse.redirect(url);
   }
 
@@ -48,6 +51,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    // Protected routes — redirect unauthenticated users to /login
     "/dashboard/:path*",
     "/profile",
     "/profile/:path*",
@@ -56,7 +60,10 @@ export const config = {
     "/onboarding",
     "/onboarding/:path*",
     "/login",
+    "/login/:path*",
     "/signup",
+    "/signup/:path*",
     "/signin",
+    "/signin/:path*",
   ],
 };
