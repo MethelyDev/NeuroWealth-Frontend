@@ -1,3 +1,8 @@
+/**
+ * Server-side / integration environment validation (WhatsApp, DB, Stellar).
+ * Used by `yarn validate:env:server` — not imported by the Next.js app bundle.
+ * For frontend runtime config see `src/lib/env.ts`.
+ */
 const requiredEnvVars = [
   "NEXT_PUBLIC_APP_ENV",
   "NEXT_PUBLIC_APP_URL",
@@ -16,17 +21,17 @@ const requiredEnvVars = [
   "WALLET_ENCRYPTION_KEY",
 ] as const;
 
-export function validateEnv() {
+export function validateServerEnv() {
   const missing = requiredEnvVars.filter((key) => !process.env[key]);
   if (missing.length > 0) {
     throw new Error(
-      `Missing required environment variables:\n${missing.map((k) => `  - ${k}`).join("\n")}`
+      `Missing required environment variables:\n${missing.map((k) => `  - ${k}`).join("\n")}`,
     );
   }
 
   const key = process.env.WALLET_ENCRYPTION_KEY!;
   if (!/^[a-f0-9]{64}$/i.test(key)) {
-    throw new Error(" WALLET_ENCRYPTION_KEY must be a 64-character hex string");
+    throw new Error("WALLET_ENCRYPTION_KEY must be a 64-character hex string");
   }
 
   const network = process.env.STELLAR_NETWORK!;
