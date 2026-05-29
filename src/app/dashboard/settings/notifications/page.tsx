@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AlertCircle, Bell, Mail, Save, ShieldAlert, X } from "lucide-react";
 import { useToast } from "@/components/notifications/ToastProvider";
 import { useI18n } from "@/contexts/I18nContext";
+import { STORAGE_KEYS } from "@/lib/storage-keys";
 
 export const dynamic = "force-dynamic";
 import { Button, Card, InlineBanner } from "@/components/ui";
@@ -18,7 +19,7 @@ interface NotificationPreferences {
   securityAlerts: boolean;
 }
 
-const STORAGE_KEY = "nw_notifications";
+const STORAGE_KEY = STORAGE_KEYS.NOTIFICATIONS;
 const DEFAULT_PREFERENCES: NotificationPreferences = {
   emailNotifications: true,
   transactionAlerts: true,

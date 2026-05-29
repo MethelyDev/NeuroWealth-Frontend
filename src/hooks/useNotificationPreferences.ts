@@ -2,8 +2,7 @@ import { useState } from "react";
 import { NotificationPreferences, DEFAULT_PREFERENCES } from "@/lib/mock-preferences";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 
-const NOTIFICATION_PREFERENCES_STORAGE_KEY =
-  STORAGE_KEYS.NOTIFICATION_PREFERENCES;
+const NOTIFICATION_PREFERENCES_STORAGE_KEY = STORAGE_KEYS.NOTIFICATIONS;
 
 export function useNotificationPreferences() {
   const [preferences, setPreferences] = useState<NotificationPreferences>(() => {

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Notification, MOCK_NOTIFICATIONS } from "@/lib/mock-notifications";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 
-const NOTIFICATION_STORAGE_KEY = STORAGE_KEYS.NOTIFICATIONS;
+const NOTIFICATION_STORAGE_KEY = STORAGE_KEYS.NOTIFICATIONS_LIST;
 
 export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>(() => {

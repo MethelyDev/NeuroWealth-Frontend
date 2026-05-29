@@ -1,8 +1,24 @@
 "use client";
 
-import { ReactNode, useMemo, useState, useEffect } from "react";
+import type { ReactNode } from "react";
+import { useState, useEffect } from "react";
 import { ResponsiveContainer } from "recharts";
 import { chartDimensions, chartTheme, getResponsiveConfig } from "@/lib/chart-theme";
+
+type ChartValue = string | number | boolean | null | undefined;
+type ChartDataKey = string | number;
+
+interface ChartTooltipPayloadItem<Value extends ReactNode = ChartValue, Key extends ReactNode = ChartDataKey> {
+  value?: Value;
+  dataKey?: Key;
+  name?: string;
+  color?: string;
+}
+
+export type ChartTooltipFormatter<Value extends ReactNode = ChartValue, Key extends ReactNode = ChartDataKey> = (
+  value: Value | undefined,
+  name: Key | undefined
+) => [ReactNode, ReactNode];
 
 interface BaseChartProps {
   children: ReactNode;
@@ -48,14 +64,19 @@ export function BaseChart({ children, height = chartDimensions.height, className
 }
 
 // Custom tooltip component that matches design spec
-interface ChartTooltipProps {
+interface ChartTooltipProps<Value extends ReactNode = number, Key extends ReactNode = string> {
   active?: boolean;
-  payload?: any[];
+  payload?: ChartTooltipPayloadItem<Value, Key>[];
   label?: string;
-  formatter?: (value: any, name: string) => [string, string];
+  formatter?: ChartTooltipFormatter<Value, Key>;
 }
 
-export function ChartTooltip({ active, payload, label, formatter }: ChartTooltipProps) {
+export function ChartTooltip<Value extends ReactNode = number, Key extends ReactNode = string>({
+  active,
+  payload,
+  label,
+  formatter,
+}: ChartTooltipProps<Value, Key>) {
   if (!active || !payload?.length) {
     return null;
   }

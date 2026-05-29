@@ -14,8 +14,8 @@ export const STORAGE_KEYS = {
   // Dashboard settings
   PREFERENCES: "nw_preferences",
   NOTIFICATIONS: "nw_notifications",
+  NOTIFICATIONS_LIST: "nw_notifications_list",
   SECURITY: "nw_security",
-  NOTIFICATION_PREFERENCES: "nw-notification-preferences",
 
   // User profile
   PROFILE: "nw_profile",
