@@ -40,3 +40,7 @@ next-env.d.ts
 
 # bundle analyzer
 .next/analyze
+
+# local build artifacts
+build.log
+install.log
