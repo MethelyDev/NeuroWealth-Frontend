@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { useToast } from '@/components/notifications/ToastProvider';
 import { clearOnboardingState, loadOnboardingState as getOnboardingState } from '@/lib/onboarding-state';
 
 interface OnboardingState {
