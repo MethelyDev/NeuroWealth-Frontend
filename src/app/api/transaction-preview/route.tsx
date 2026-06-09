@@ -3,9 +3,8 @@ import {
   buildPreviewSnapshot,
   buildStatusChips,
   getTransactionContext,
-  parsePreviewState,
-  parseTransactionKind,
 } from "@/lib/transactions";
+import { parseTransactionPreviewSearchParams } from "@/lib/preview-route-query";
 import { ImageResponse } from "next/og";
 
 export const dynamic = "force-dynamic";
@@ -50,9 +49,8 @@ function getToneColor(tone: "success" | "warning" | "error") {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const theme = searchParams.get("theme") === "dark" ? "dark" : "light";
-  const kind = parseTransactionKind(searchParams.get("kind"));
-  const preview = parsePreviewState(searchParams.get("preview"));
+  const { theme, kind, preview } =
+    parseTransactionPreviewSearchParams(searchParams);
   const palette = getThemePalette(theme);
   const context = getTransactionContext(kind);
   const snapshot = buildPreviewSnapshot(kind, preview);
