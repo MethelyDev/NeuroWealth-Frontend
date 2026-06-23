@@ -271,7 +271,7 @@ export default function ProfilePage() {
 
         {/* ── Breadcrumb ── */}
         <nav className="profile-breadcrumb" aria-label="breadcrumb">
-          <span>Dashboard</span>
+          <a href="/dashboard/settings" className="breadcrumb-link">Settings</a>
           <ChevronRight size={13} />
           <span className="active">Profile</span>
         </nav>
@@ -526,6 +526,12 @@ export default function ProfilePage() {
         .profile-breadcrumb .active {
           color: #38bdf8;
         }
+        .breadcrumb-link {
+          color: #475569;
+          text-decoration: none;
+          transition: color 0.15s;
+        }
+        .breadcrumb-link:hover { color: #94a3b8; }
 
         /* ── Banners ── */
         .banner {
