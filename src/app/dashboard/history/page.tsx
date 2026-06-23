@@ -73,39 +73,11 @@ export default function HistoryPage() {
         </div>
       )}
 
-      {!loading && !error && scenario !== "empty" && (
-        <>
-          <div className="bg-white rounded-lg shadow-sm">
-            <div className="p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Transactions</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between py-3 border-b">
-                  <div>
-                    <p className="font-medium text-gray-900">Deposit</p>
-                    <p className="text-sm text-gray-500">Mar 23, 2026 • 2:30 PM</p>
-                  </div>
-                  <span className="text-green-600 font-medium">+$1,000.00</span>
-                </div>
-                <div className="flex items-center justify-between py-3 border-b">
-                  <div>
-                    <p className="font-medium text-gray-900">Yield Payment</p>
-                    <p className="text-sm text-gray-500">Mar 22, 2026 • 11:45 AM</p>
-                  </div>
-                  <span className="text-green-600 font-medium">+$12.50</span>
-                </div>
-                <div className="flex items-center justify-between py-3">
-                  <div>
-                    <p className="font-medium text-gray-900">Rebalance</p>
-                    <p className="text-sm text-gray-500">Mar 21, 2026 • 9:15 AM</p>
-                  </div>
-                  <span className="text-gray-600 font-medium">Reallocation</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <TransactionHistory />
-        </>
-      )}
+      {/*
+        The full deposits / withdrawals / rebalancing timeline with filters,
+        pagination, status tags, and tx-hash explorer links (Issue 472).
+      */}
+      {!loading && !error && scenario !== "empty" && <TransactionHistory />}
     </div>
   );
 }

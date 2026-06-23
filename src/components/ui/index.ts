@@ -9,11 +9,13 @@ export * from "./ErrorBlock";
 export * from "./ErrorPage";
 export * from "./FormErrors";
 export * from "./FormField";
+export * from "./FormattedValue";
 export * from "./Input";
 export * from "./InlineBanner";
 export * from "./Modal";
 export type { ModalSize } from "./Modal";
 export * from "./Switch";
+export * from "./Tooltip";
 export { Drawer } from "./Drawer";
 // Skeleton loading components
 export {

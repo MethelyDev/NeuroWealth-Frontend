@@ -22,6 +22,7 @@ import {
   saveStoredPreference,
 } from "@/lib/strategies";
 import { apiRequest, ApiRequestError } from "@/lib/api-client";
+import { formatApyRange } from "@/lib/formatters";
 import { Button } from "@/components/ui/Button";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -156,7 +157,8 @@ function StrategyCardView({
       <div className="mb-3">
         <h2 className="text-lg font-bold text-slate-100">{strategy.title}</h2>
         <p className="mt-0.5 text-2xl font-extrabold text-slate-50 tabular-nums">
-          {strategy.apyRange}
+          {/* Issue 468: locale-aware APY range with 2–4 dp precision. */}
+          {formatApyRange(strategy.apyMin, strategy.apyMax)}
           <span className="ml-1 text-sm font-medium text-slate-500">APY</span>
         </p>
       </div>
@@ -281,7 +283,9 @@ function ConfirmModal({
         <div className="mb-5 rounded-xl border border-white/8 bg-white/3 p-4 space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-slate-500">APY range</span>
-            <span className="font-semibold text-slate-200 tabular-nums">{toStrategy.apyRange}</span>
+            <span className="font-semibold text-slate-200 tabular-nums">
+              {formatApyRange(toStrategy.apyMin, toStrategy.apyMax)}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-500">Risk level</span>

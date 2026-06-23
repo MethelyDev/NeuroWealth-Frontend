@@ -50,7 +50,7 @@ export function PrivacyModal() {
             return (
               <div key={g.key} style={{ background: "rgba(255,255,255,0.025)", border: `1px solid ${BORDER_SUBTLE}`, borderRadius: "10px", overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 14px" }}>
-                  <button onClick={() => setExpanded(isEx ? null : g.key)} style={{ width: "44px", height: "44px", display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: "none", color: "ba(255,255,255,0.35)", cursor: "pointer", borderRadius: "6px", flexShrink: 0 }}>
+                  <button onClick={() => setExpanded(isEx ? null : g.key)} style={{ width: "44px", height: "44px", display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: "none", color: "rgba(255,255,255,0.35)", cursor: "pointer", borderRadius: "6px", flexShrink: 0 }}>
                     {isEx ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </button>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, cursor: "pointer" }} onClick={() => setExpanded(isEx ? null : g.key)}>

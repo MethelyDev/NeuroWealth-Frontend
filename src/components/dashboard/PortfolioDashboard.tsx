@@ -12,6 +12,7 @@ import {
   parseScenario,
 } from "@/lib/portfolio";
 import {
+  formatApy,
   formatCurrency,
   formatPercent,
   formatSignedCurrency,
@@ -270,7 +271,8 @@ export function PortfolioDashboard() {
         },
         {
           label: "APY",
-          value: formatPercent(portfolio.summary.apy),
+          // Issue 468 spec: APY uses 2–4 dp precision.
+          value: formatApy(portfolio.summary.apy),
           helper: "Weighted live rate across the current strategy mix.",
           tone: getValueTone(portfolio.summary.apy),
           mono: true,
